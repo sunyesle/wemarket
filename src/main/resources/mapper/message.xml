@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.market.mapper.MessageMapper">
+    <select id="selectMessageListByChatId" resultType="com.sys.market.entity.Message">
+        SELECT id, chat_id, `from`, message, create_date
+        FROM message
+        WHERE chat_id = #{chatId}
+        ORDER BY create_date DESC
+        <if test="limit != null">
+            LIMIT 0, #{limit}
+        </if>
+    </select>
+
+    <insert id="insertMessage" parameterType="com.sys.market.entity.Message">
+        INSERT INTO message(chat_id, `from`, message)
+        VALUES (#{chatId}, #{from}, #{message})
+    </insert>
+</mapper>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.market.mapper.UserMapper">
+    <resultMap id="userMap" type="com.sys.market.entity.User">
+        <id property="id" column="id"/>
+        <result property="password" column="password"/>
+        <result property="nickname" column="nickname"/>
+        <result property="email" column="email"/>
+        <result property="bio" column="bio"/>
+        <result property="profileImage" column="profile_image"/>
+        <result property="status" column="status"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="passwordChangeDate" column="password_change_date"/>
+
+        <result property="address" column="address"/>
+        <result property="rating" column="rating"/>
+        <collection property="role" column="id" select="selectUserRolesById" javaType="java.util.ArrayList" ofType="String"/>
+    </resultMap>
+    <select id="selectUserRolesById" parameterType="String" resultType="String">
+        SELECT name role FROM user_role INNER JOIN role ON role_id = id where user_id= #{id}
+    </select>
+
+
+    <select id="selectById" resultMap="userMap">
+        SELECT u.id, u.password, u.nickname, u.email, u.bio, u.profile_image, u.status, u.create_date, u.update_date, u.password_change_date,
+               a.name address, AVG(r.rating) rating
+        FROM user u
+        JOIN address a ON u.address_code = a.code
+        LEFT OUTER JOIN review r ON u.id = r.user_id
+        WHERE u.id = #{id}
+        GROUP BY u.id
+        ORDER BY u.id
+    </select>
+
+    <select id="selectCountById" resultType="int">
+        SELECT COUNT(*) FROM user WHERE id = #{id}
+    </select>
+
+    <insert id="insertUser" parameterType="com.sys.market.entity.User">
+        INSERT INTO user (id, password, nickname, email, address_code)
+        VALUES  (#{id}, #{password}, #{nickname}, #{email}, #{addressCode})
+    </insert>
+
+    <insert id="insertUserRole">
+        INSERT INTO user_role(user_id, role_id)
+        VALUES
+        <foreach collection="roles" item="role" separator=",">
+            (#{userId}, (SELECT id FROM role WHERE name=#{role}))
+        </foreach>
+    </insert>
+
+    <update id="updateUser">
+        UPDATE user
+        SET
+        <if test="nickname != null">nickname = #{nickname},</if>
+        <if test="email != null">email = #{email},</if>
+        <if test="addressCode != null">address_code = #{addressCode},</if>
+        <if test="bio != null">bio = #{bio},</if>
+        update_date = NOW()
+        WHERE id= #{id}
+    </update>
+
+    <update id="updateUserStatus">
+        UPDATE user
+        SET
+        status = #{status},
+        update_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateUserPassword">
+        UPDATE user
+        SET
+        password = #{password},
+        password_change_date = NOW(),
+        update_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateUserProfileImage">
+        UPDATE user
+        SET
+        <if test="profileImage == null">profile_image = NULL,</if>
+        <if test="profileImage != null">profile_image = #{profileImage},</if>
+        update_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteUserRole">
+        DELETE FROM user_role
+        WHERE user_id = #{userId}
+    </delete>
+</mapper>

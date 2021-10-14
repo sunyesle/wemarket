@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.market.mapper.WishlistMapper">
+    <sql id="wishItemSearch">
+        <where>
+            <if test="userId != null and userId != ''">AND user_id = #{userId}</if>
+            <if test="itemId != null">AND item_id = #{itemId}</if>
+        </where>
+    </sql>
+
+    <select id="selectWishlistList" parameterType="com.sys.market.dto.criteria.WishlistSearchCriteria" resultType="com.sys.market.entity.Item">
+        SELECT i.id, i.user_id, i.category_id, i.price, i.title, i.content, i.create_date, i.update_date, i.delete_date, i.status,
+        w.nickname nickname, w.address address, c.name category,
+        item_image.path thumb_image,
+        count(if(offer.id is not null, offer.id, null)) offer_count
+        FROM (
+            SELECT user_id, item_id, u.nickname nickname, a.name address
+            FROM wishlist
+            JOIN user u ON user_id = u.id
+            JOIN address a ON u.address_code = a.code
+            <include refid="wishItemSearch"/>
+            ORDER BY wishlist.create_date DESC
+            LIMIT ${startRow -1}, ${pageSize}
+        ) w
+        JOIN item i ON w.item_id = i.id
+        JOIN item_category c ON i.category_id = c.id
+        LEFT OUTER JOIN item_image ON i.thumb_image_id = item_image.id
+        LEFT OUTER JOIN offer ON i.id = offer.item_id
+        GROUP BY i.id
+    </select>
+
+    <select id="selectWishlistCount" parameterType="com.sys.market.dto.criteria.WishlistSearchCriteria" resultType="int">
+        SELECT COUNT(*)
+        FROM wishlist
+        <include refid="wishItemSearch"/>
+    </select>
+
+    <insert id="insertWishlist">
+        INSERT INTO wishlist (user_id, item_id)
+        VALUES (#{userId}, #{itemId})
+    </insert>
+
+    <delete id="deleteWishlist">
+        DELETE FROM wishlist
+        WHERE user_id = #{userId} AND item_id = #{itemId}
+    </delete>
+</mapper>

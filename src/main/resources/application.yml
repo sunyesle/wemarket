@@ -1,0 +1,89 @@
+spring:
+  profiles:
+    active: prod
+  datasource:
+    url: #
+    username: #
+    password: #
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    hikari:
+      connection-timeout: 60000
+      maximum-pool-size: 5
+  redis:
+    host: #
+    port: #
+    password: #
+  jwt:
+    access_token_secret: #
+    refresh_token_secret: #
+  mail:
+    host: #
+    port: #
+    username: #
+    password: #
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 5000
+          starttls:
+            enable: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enable: false
+  freemarker:
+    template-loader-path: classpath:/templates
+    suffix: .ftl
+    cache: false
+    request-context-attribute: rc
+  mvc:
+    static-path-pattern: /static/**
+
+server:
+  error:
+    path: /error
+
+logging:
+  level:
+    jdbc:
+      sqlonly: INFO
+      resultsettable: INFO
+      resultset : ERROR
+      audit: ERROR
+      sqltiming: ERROR
+
+mybatis:
+  type-aliases-package: com.sys.market.dto
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    jdbc-type-for-null: varchar
+    map-underscore-to-camel-case: true
+
+springdoc:
+  version: '@project.version@'
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  swagger-ui:
+    operations-sorter: alpha
+    tags-sorter: alpha
+    path: /swagger-ui.html
+    disable-swagger-default-url: false # 기본으로 세팅되는 200,404 등의 메시지를 표시하지 않는다
+    display-query-params-without-oauth2: true
+  paths-to-match:
+    - /api/**
+
+firebase:
+  bucket-name: #
+  image-url-format: #
+  image-url-pattern: #
+  service-account-path: #
+
+resources:
+  location: #
+  path: #

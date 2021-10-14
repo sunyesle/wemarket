@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.market.mapper.ChatMapper">
+    <select id="selectChat" resultType="com.sys.market.entity.Chat">
+        SELECT c1.chat_id id, c1.user_id `from`, c2.user_id `to`, chat.create_date, chat.update_date, to_user.nickname to_nickname
+        FROM chat_user c1
+        JOIN chat_user c2 ON c1.chat_id = c2.chat_id
+        JOIN chat ON c1.chat_id = chat.id
+        JOIN user to_user ON c2.user_id = to_user.id
+        WHERE c1.chat_id = #{chatId}
+        AND c1.user_id = #{userId}
+        AND c2.user_id != #{userId}
+    </select>
+
+    <select id="selectChatList" parameterType="com.sys.market.dto.criteria.ChatCriteria" resultType="com.sys.market.entity.Chat">
+        SELECT c1.chat_id id, c1.user_id `from`, c2.user_id `to`, chat.create_date, chat.update_date, to_user.nickname to_nickname
+        FROM chat_user c1
+        JOIN chat_user c2 ON c1.chat_id = c2.chat_id
+        JOIN chat ON c1.chat_id = chat.id
+        JOIN user to_user ON c2.user_id = to_user.id
+        WHERE c1.user_id = #{userId}
+        AND c2.user_id != #{userId}
+        ORDER BY chat.update_date DESC
+        LIMIT ${startRow -1}, ${pageSize}
+    </select>
+
+    <select id="selectChatCount" resultType="Integer">
+        SELECT COUNT(*)
+        FROM chat_user
+        WHERE user_id = #{userId}
+    </select>
+
+    <insert id="insertChat">
+        INSERT INTO chat(id)
+        VALUES(#{chatRoomId})
+    </insert>
+
+    <insert id="insertChatUser">
+        INSERT INTO chat_user(chat_id, user_id)
+        VALUES (#{chatId}, #{userId})
+    </insert>
+
+    <update id="updateChat">
+        UPDATE chat
+        SET update_date = NOW()
+        WHERE id = #{chatRoomId}
+    </update>
+
+    <select id="selectChatId" resultType="string">
+        SELECT chat.id
+        FROM chat_user c1
+        JOIN chat_user c2 ON c1.chat_id = c2.chat_id
+        JOIN chat ON c1.chat_id = chat.id
+        WHERE c1.user_id = #{userId1}
+        AND c2.user_id = #{userId2}
+    </select>
+
+    <select id="selectChatExist" resultType="boolean">
+        SELECT IF(COUNT(*) > 0, 'Y', 'N')
+        FROM chat_user
+        WHERE chat_id = #{chatId}
+        AND user_id = #{userId}
+    </select>
+</mapper>

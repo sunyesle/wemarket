@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.market.mapper.AddressMapper">
+    <select id="selectAddressListByDongName" resultType="com.sys.market.entity.Address">
+        SELECT code, name, sido_name, sikungu_name, dong_name
+        FROM address
+        WHERE dong_name LIKE CONCAT(#{searchKeyword}, '%')
+    </select>
+
+    <select id="selectAddress" resultType="com.sys.market.entity.Address">
+        SELECT code, name, sido_name, sikungu_name, dong_name
+        FROM address
+        WHERE code = #{code}
+    </select>
+</mapper>

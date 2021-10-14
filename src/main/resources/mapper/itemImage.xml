@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.market.mapper.ItemImageMapper">
+    <select id="selectItemImagePathList" resultType="string">
+        SELECT path
+        FROM item_image
+        WHERE item_id = #{itemId}
+        ORDER BY idx
+    </select>
+
+    <select id="selectItemImageIdList" resultType="int">
+        SELECT id
+        FROM item_image
+        WHERE item_id = #{itemId}
+        ORDER BY idx
+    </select>
+
+    <insert id="insertItemImages" parameterType="java.util.List">
+        INSERT INTO item_image (item_id, path, idx)
+        VALUES
+        <foreach collection="itemImageList" item="itemImage" separator=",">
+            (#{itemImage.itemId}, #{itemImage.path}, #{itemImage.idx})
+        </foreach>
+    </insert>
+
+    <update id="updateItemImages" parameterType="java.util.List">
+        <foreach collection="itemImageList" item="itemImage">
+            UPDATE item_image
+            SET idx = #{itemImage.idx}
+            WHERE id = #{itemImage.id} AND item_id = #{itemImage.itemId};
+        </foreach>
+    </update>
+
+    <delete id="deleteItemImageByItemId">
+        DELETE FROM item_image
+        WHERE item_id = #{itemId}
+    </delete>
+
+    <delete id="deleteItemImages" parameterType="java.util.List">
+        DELETE FROM item_image
+        WHERE id IN
+        <foreach collection="idList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

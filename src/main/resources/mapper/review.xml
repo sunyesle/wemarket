@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.market.mapper.ReviewMapper">
+    <select id="selectReviewById" resultType="com.sys.market.entity.Review">
+        SELECT r.id, r.user_id, r.writer_id, r.rating, r.content, r.review_type, r.create_date, r.update_date,
+               writer.nickname writer_nickname
+        FROM review r
+        JOIN user writer ON r.writer_id = writer.id
+        WHERE r.id = #{id}
+    </select>
+
+    <select id="selectReviewList" parameterType="com.sys.market.dto.criteria.ReviewSearchCriteria" resultType="com.sys.market.entity.Review">
+        SELECT r.id, r.user_id, r.writer_id, r.rating, r.content, r.review_type, r.create_date, r.update_date,
+               writer.nickname writer_nickname
+        FROM review r
+        JOIN user writer ON r.writer_id = writer.id
+        <include refid="searchReview"/>
+        ORDER BY r.update_date DESC
+        LIMIT ${startRow -1}, ${pageSize}
+    </select>
+
+    <select id="selectReviewCount" parameterType="com.sys.market.dto.criteria.ReviewSearchCriteria" resultType="int">
+        SELECT COUNT(*) FROM review
+        <include refid="searchReview"/>
+    </select>
+
+    <sql id="searchReview">
+        <where>
+            <if test="userId != null and userId != ''">AND user_id = #{userId}</if>
+            <if test="writerId != null and writerId != ''">AND writer_id = #{writerId}</if>
+            <if test="reviewType != null">AND review_type = #{reviewType}</if>
+        </where>
+    </sql>
+
+    <insert id="insertReview" parameterType="com.sys.market.entity.Review" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO review (user_id, writer_id, rating, content, review_type)
+        VALUES(#{userId}, #{writerId}, #{rating}, #{content}, #{reviewType})
+    </insert>
+
+    <update id="updateReview" parameterType="com.sys.market.entity.Review">
+        UPDATE review
+        SET update_date = NOW()
+        <if test="rating != null">, rating = #{rating}</if>
+        <if test="content != null and content != ''">, content = #{content}</if>
+        <if test="reviewType != null">, review_type = #{reviewType}</if>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteReview">
+        DELETE FROM review
+        WHERE id = #{id}
+    </delete>
+</mapper>

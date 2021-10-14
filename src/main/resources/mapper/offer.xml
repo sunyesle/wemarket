@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.market.mapper.OfferMapper">
+    <resultMap id="offerMap" type="com.sys.market.entity.Offer">
+        <id property="id" column="id"/>
+        <result property="itemId" column="item_id"/>
+        <result property="sellerId" column="seller_id"/>
+        <result property="buyerId" column="buyer_id"/>
+        <result property="price" column="price"/>
+        <result property="isAccepted" column="is_accepted"/>
+        <result property="isCompleted" column="is_completed"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updateDate" column="update_date"/>
+
+        <result property="itemTitle" column="item_title"/>
+        <collection property="buyer" resultMap="buyerMap"/>
+    </resultMap>
+    <resultMap id="buyerMap" type="com.sys.market.entity.UserInfo">
+        <id property="id" column="buyer_id"/>
+        <result property="nickname" column="buyer_nickname"/>
+        <result property="address" column="buyer_address"/>
+        <result property="rating" column="buyer_rating"/>
+    </resultMap>
+
+    <select id="selectOfferById" resultMap="offerMap">
+        SELECT offer.id, offer.item_id, offer.seller_id, offer.buyer_id, offer.price, offer.is_accepted, offer.is_completed, offer.create_date, offer.update_date,
+            item.title item_title,
+            u.nickname buyer_nickname,
+            a.name buyer_address,
+            AVG(r.rating) buyer_rating
+        FROM offer
+        JOIN item ON offer.item_id = item.id
+        JOIN user u ON buyer_id = u.id
+        JOIN address a ON u.address_code = a.code
+        LEFT OUTER JOIN review r ON u.id = r.user_id
+        WHERE offer.id = #{id}
+        GROUP BY offer.id
+    </select>
+
+    <select id="selectOfferList" parameterType="com.sys.market.dto.criteria.OfferSearchCriteria" resultMap="offerMap">
+        SELECT offer.id, offer.item_id, offer.seller_id, offer.buyer_id, offer.price, offer.is_accepted, offer.is_completed, offer.create_date, offer.update_date,
+        o.buyer_nickname buyer_nickname, o.buyer_address buyer_address, o.item_title item_title,
+        AVG(r.rating) buyer_rating
+        FROM (
+        SELECT offer.id id, u.nickname buyer_nickname, a.name buyer_address, IF(i.delete_date IS NULL, i.title, null) item_title
+        FROM offer
+        JOIN user u ON offer.buyer_id = u.id
+        JOIN address a ON u.address_code = a.code
+        JOIN item i ON offer.item_id = i.id
+        <include refid="offerSearch"/>
+        LIMIT ${startRow -1}, ${pageSize}
+        ) o
+        JOIN offer ON offer.id = o.id
+        LEFT OUTER JOIN review r ON offer.buyer_id = r.user_id
+        GROUP BY offer.id
+        ORDER BY offer.create_date DESC
+    </select>
+
+    <select id="selectOfferCount" parameterType="com.sys.market.dto.criteria.OfferSearchCriteria" resultType="int">
+        SELECT COUNT(*)
+        FROM offer
+        JOIN user u ON offer.buyer_id = u.id
+        JOIN item i ON offer.item_id = i.id
+        <include refid="offerSearch"/>
+    </select>
+
+    <sql id="offerSearch">
+        <where>
+            <if test="itemId != null and itemId != ''">
+                AND  offer.item_id= #{itemId}
+            </if>
+            <if test="sellerId != null and sellerId != ''">
+                AND offer.seller_id = #{sellerId}
+            </if>
+            <if test="buyerId != null and buyerId != ''">
+                AND offer.buyer_id = #{buyerId}
+            </if>
+            <if test="accepted != null">
+                <choose>
+                    <when test="accepted.name() == 'OPEN'">AND offer.is_accepted is NULL</when>
+                    <when test="accepted.name() == 'TRUE'">AND offer.is_accepted = 'Y'</when>
+                    <when test="accepted.name() == 'FALSE'">AND offer.is_accepted = 'N'</when>
+                </choose>
+            </if>
+            <if test="completed != null and completed != ''">
+                <choose>
+                    <when test="completed">AND offer.is_completed = 'Y'</when>
+                    <otherwise>AND offer.is_completed = 'N'</otherwise>
+                </choose>
+            </if>
+        </where>
+    </sql>
+
+    <insert id="insertOffer" parameterType="com.sys.market.entity.Offer" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO offer (item_id, seller_id, buyer_id, price)
+        VALUES(#{itemId}, #{sellerId}, #{buyerId}, #{price})
+    </insert>
+
+    <update id="updateOfferIsAccepted" parameterType="com.sys.market.entity.Offer">
+        UPDATE offer
+        SET
+        <choose>
+            <when test="isAccepted == null">is_accepted = NULL,</when>
+            <when test="isAccepted">is_accepted = 'Y',</when>
+            <otherwise>is_accepted = 'N',</otherwise>
+        </choose>
+        update_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateOfferComplete">
+        UPDATE offer
+        SET
+        is_accepted = 'N', is_completed = 'Y', update_date = NOW()
+        WHERE
+        item_id = #{itemId}
+    </update>
+</mapper>

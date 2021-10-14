@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sys.market.mapper.FollowMapper">
+    <!--
+    follower_Id : 팔로우를 한 user id
+    user_Id : 팔로우 당한 user id
+    -->
+    <select id="selectFollowList" parameterType="com.sys.market.dto.criteria.FollowSearchCriteria" resultType="com.sys.market.entity.Follow">
+        SELECT user_id, follower_id, follow.create_date, user.nickname user_nickname FROM follow
+        JOIN user ON user_id = user.id
+        <include refid="searchFollow"/>
+        ORDER BY create_date DESC
+        LIMIT ${startRow -1}, ${pageSize}
+    </select>
+
+    <select id="selectFollowCount" parameterType="com.sys.market.dto.criteria.FollowSearchCriteria" resultType="int">
+        SELECT COUNT(*) FROM follow
+        <include refid="searchFollow"/>
+    </select>
+
+    <sql id="searchFollow">
+        <where>
+            <if test="userId!=null and userId!=''">AND user_Id = #{userId}</if>
+            <if test="followerId!=null and followerId!=''">AND follower_Id = #{followerId}</if>
+        </where>
+    </sql>
+
+    <insert id="insertFollow">
+        INSERT INTO follow (follower_Id, user_Id)
+        VALUES (#{followerId}, #{userId})
+    </insert>
+
+    <delete id="deleteFollow">
+        DELETE FROM follow
+        WHERE follower_Id= #{followerId} and user_Id= #{userId}
+    </delete>
+</mapper>
